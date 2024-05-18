@@ -6,6 +6,6 @@ This repo's purpose is to provide scripts/configurations for a server that will 
 **Features**
 
 File hosting via Apache<br>
-Chat server via RocketChat <br>
+Simple Chat server <br>
 Captive Portal via HostAPD<br>
 SMB Fileshare for local clients
