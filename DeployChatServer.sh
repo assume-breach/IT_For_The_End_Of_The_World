@@ -2,15 +2,27 @@
 
 # Define directories and file paths
 BASE_DIR="/opt/simple-chat"
-SERVER_JS="$BASE_DIR/server.js"
-INDEX_HTML="$BASE_DIR/public/index.html"
-PACKAGE_JSON="$BASE_DIR/package.json"
+CHAT_SERVER_JS="$BASE_DIR/server.js"
+CHAT_INDEX_HTML="$BASE_DIR/public/index.html"
+CHAT_PACKAGE_JSON="$BASE_DIR/package.json"
+SYSTEMD_SERVICE="/etc/systemd/system/worldended-chat.service"
+APACHE_CONF="/etc/apache2/sites-available/000-default.conf"
+MUSIC_DIR="/var/www/html/music"
+INDEX_HTML="/var/www/html/index.html"
 
-# Create the base directory and public directory
+# Function to get the server's IP address
+get_ip() {
+    hostname -I | awk '{print $1}'
+}
+
+# Get the server's IP address
+SERVER_IP=$(get_ip)
+
+# Create the base directory and public directory for chat
 mkdir -p $BASE_DIR/public
 
-# Create package.json
-cat <<EOL > $PACKAGE_JSON
+# Create package.json for chat server
+cat <<EOL > $CHAT_PACKAGE_JSON
 {
   "name": "simple-chat",
   "version": "1.0.0",
@@ -28,8 +40,8 @@ cat <<EOL > $PACKAGE_JSON
 }
 EOL
 
-# Create server.js
-cat <<EOL > $SERVER_JS
+# Create server.js for chat
+cat <<EOL > $CHAT_SERVER_JS
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -49,11 +61,12 @@ io.on('connection', (socket) => {
     
     socket.on('set username', (name) => {
         username = name;
+        console.log(\`User connected: \${username}\`);
         socket.broadcast.emit('user connected', \`\${username} has joined the chat\`);
     });
 
     socket.on('disconnect', () => {
-        console.log('user disconnected');
+        console.log(\`User disconnected: \${username}\`);
         socket.broadcast.emit('user disconnected', \`\${username} has left the chat\`);
     });
 
@@ -68,8 +81,8 @@ server.listen(PORT, () => {
 });
 EOL
 
-# Create index.html
-cat <<EOL > $INDEX_HTML
+# Create index.html for chat
+cat <<EOL > $CHAT_INDEX_HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -154,8 +167,103 @@ EOL
 # Change to the base directory
 cd $BASE_DIR
 
-# Install necessary npm packages
+# Install necessary npm packages for chat server
 npm install
 
+# Create a systemd service file for the chat server
+cat <<EOL > $SYSTEMD_SERVICE
+[Unit]
+Description=Worldended Chat Server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node $CHAT_SERVER_JS
+WorkingDirectory=$BASE_DIR
+Restart=always
+User=nobody
+Group=nogroup
+Environment=PATH=/usr/bin:/usr/local/bin
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+# Reload systemd manager configuration
+systemctl daemon-reload
+
+# Enable the chat server service to start at boot
+systemctl enable worldended-chat.service
+
+# Start the chat server service
+systemctl start worldended-chat.service
+
+# Create music directory and sample music file
+mkdir -p $MUSIC_DIR
+echo "This is a sample music file" > $MUSIC_DIR/sample-music.txt
+
+# Create the main index.html file
+cat <<EOL > $INDEX_HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome To The End Of The World!</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; }
+        #banner { padding: 20px; background-color: #222; color: #fff; }
+        #content { margin: 20px; }
+        img { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <div id="banner">Welcome To The End Of The World!</div>
+    <div id="content">
+        <img src="path/to/your/image.jpg" alt="Welcome Image">
+        <h2>Choose An Option</h2>
+        <ul>
+            <li><a href="http://$SERVER_IP/live-chat">Live Chat</a></li>
+            <li><a href="/fileshare">Knowledge Base Documents</a></li>
+            <li><a href="/music">Listen To Music</a></li>
+        </ul>
+    </div>
+</body>
+</html>
+EOL
+
+# Configure Apache to serve the chat application under /live-chat and fileshare under /fileshare
+cat <<EOL > $APACHE_CONF
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html
+
+    Alias /live-chat /opt/simple-chat/public
+    <Directory /opt/simple-chat/public>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    Alias /fileshare /var/www/html/fileshare
+    <Directory /var/www/html/fileshare>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOL
+
+# Reload Apache to apply the new configuration
+systemctl reload apache2
+
 # Print completion message
-echo "Simple chat server setup is complete. You can start the server by running 'node server.js' in the /opt/simple-chat directory."
+echo "Worldended chat server and fileshare setup is complete."
+echo "The chat server will automatically start at boot."
+echo "You can start the chat server manually by running 'systemctl start worldended-chat' or stop it with 'systemctl stop worldended-chat'."
+echo "Access the chat at http://$SERVER_IP/live-chat"
+echo "Access the fileshare at http://$SERVER_IP/fileshare"
+echo "Access the music at http://$SERVER_IP/music"
