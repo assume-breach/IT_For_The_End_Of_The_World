@@ -224,9 +224,9 @@ cat <<EOL > $INDEX_HTML
         <img src="frowny.png" alt="Welcome Image">
         <h2>Choose An Option</h2>
         <ul>
-            <li><a href="http://$SERVER_IP/live-chat">Live Chat</a></li>
-            <li><a href="http://$SERVER_IP/fileshare">Knowledge Base Documents</a></li>
-            <li><a href="http://$SERVER_IP/music">Listen To Music</a></li>
+            <li><a href="/live-chat">Live Chat</a></li>
+            <li><a href="fileshare">Knowledge Base Documents</a></li>
+            <li><a href="/music">Listen To Music</a></li>
         </ul>
     </div>
 </body>
