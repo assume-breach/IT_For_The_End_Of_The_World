@@ -17,7 +17,8 @@ get_ip() {
 
 # Get the server's IP address
 SERVER_IP=$(get_ip)
-
+apt install apache2 -y
+cp frowny.png /var/www/html/
 # Create the base directory and public directory for chat
 mkdir -p $BASE_DIR/public
 
@@ -220,7 +221,7 @@ cat <<EOL > $INDEX_HTML
 <body>
     <div id="banner">Welcome To The End Of The World!</div>
     <div id="content">
-        <img src="/opt/IT_For_The_End_Of_The_World/frowny.png" alt="Welcome Image">
+        <img src="frowny.png" alt="Welcome Image">
         <h2>Choose An Option</h2>
         <ul>
             <li><a href="http://$SERVER_IP/live-chat">Live Chat</a></li>
