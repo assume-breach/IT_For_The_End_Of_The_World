@@ -220,12 +220,12 @@ cat <<EOL > $INDEX_HTML
 <body>
     <div id="banner">Welcome To The End Of The World!</div>
     <div id="content">
-        <img src="path/to/your/image.jpg" alt="Welcome Image">
+        <img src="/opt/IT_For_The_End_Of_The_World/frowny.png" alt="Welcome Image">
         <h2>Choose An Option</h2>
         <ul>
             <li><a href="http://$SERVER_IP/live-chat">Live Chat</a></li>
-            <li><a href="/fileshare">Knowledge Base Documents</a></li>
-            <li><a href="/music">Listen To Music</a></li>
+            <li><a href="http://$SERVER_IP/fileshare">Knowledge Base Documents</a></li>
+            <li><a href="http://$SERVER_IP/music">Listen To Music</a></li>
         </ul>
     </div>
 </body>
