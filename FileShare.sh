@@ -11,7 +11,7 @@ FILES_DIR="/opt/fileserver"
 MUSIC_DIR="/var/www/html/music"
 INDEX_HTML="/var/www/html/index.html"
 IMAGE_PATH="/var/www/html/image.jpg" # Path to your image
-
+apt install npm -y
 # Function to get the server's IP address
 get_ip() {
     hostname -I | awk '{print $1}'
