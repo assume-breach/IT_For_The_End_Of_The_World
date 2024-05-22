@@ -2,11 +2,12 @@
 
 # Install necessary packages
 apt-get update
-apt-get install -y dnsmasq hostapd apache2 bridge-utils
+apt-get install -y dnsmasq hostapd apache2 bridge-utils iptables
 
 # Stop NetworkManager and wpa_supplicant if they are running
 systemctl stop NetworkManager
 systemctl stop wpa_supplicant
+systemctl unmask hostapd 
 
 # Bring up wlan1 interface
 ip link set wlan1 up
@@ -70,10 +71,12 @@ iptables -t nat -A PREROUTING -i wlan1 -p tcp --dport 443 -j DNAT --to-destinati
 # Set up iptables rules for masquerading
 iptables -t nat -A POSTROUTING -j MASQUERADE
 
+
 # Restart services
-service dnsmasq restart
-service hostapd restart
-service apache2 restart
+systemctl restart dnsmasq 
+systemctl restart hostapd 
+systemctl restart apache2 
+systemctl restart NetworkManager
 
 # Check if hostapd is running
 if ! pgrep hostapd >/dev/null; then
