@@ -1,5 +1,5 @@
 #!/bin/bash
-
+apt install apache2 -y
 # Define directories and file paths
 FILES_DIR="/opt/fileserver"
 APACHE_CONF="/etc/apache2/sites-available/000-default.conf"
