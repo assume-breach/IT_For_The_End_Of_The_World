@@ -224,9 +224,9 @@ cat <<EOL > $INDEX_HTML
         <img src="frowny.png" alt="Welcome Image">
         <h2>Choose An Option</h2>
         <ul>
-            <li><a href="/live-chat">Live Chat</a></li>
-            <li><a href="fileshare">Knowledge Base Documents</a></li>
-            <li><a href="/music">Listen To Music</a></li>
+            <li><a href="http://10.0.0.1/live-chat">Live Chat</a></li>
+            <li><a href="http://10.0.0.1/fileshare">Knowledge Base Documents</a></li>
+            <li><a href="http://10.0.0.1/music">Listen To Music</a></li>
         </ul>
     </div>
 </body>
@@ -265,6 +265,4 @@ systemctl reload apache2
 echo "Worldended chat server and fileshare setup is complete."
 echo "The chat server will automatically start at boot."
 echo "You can start the chat server manually by running 'systemctl start worldended-chat' or stop it with 'systemctl stop worldended-chat'."
-echo "Access the chat at http://$SERVER_IP/live-chat"
-echo "Access the fileshare at http://$SERVER_IP/fileshare"
-echo "Access the music at http://$SERVER_IP/music"
+
