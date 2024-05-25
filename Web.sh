@@ -261,6 +261,9 @@ cat <<EOL > $APACHE_CONF
 </VirtualHost>
 EOL
 
+# Enable the Apache site configuration
+a2ensite 000-default.conf
+
 # Reload Apache to apply the new configuration
 systemctl reload apache2
 
