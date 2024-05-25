@@ -1,8 +1,14 @@
 #!/bin/bash
 
+# Ensure the script is executed with superuser privileges
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root"
+   exit 1
+fi
+
 # Install necessary packages
 apt-get update
-apt-get install -y dnsmasq hostapd apache2 bridge-utils iptables
+apt-get install -y dnsmasq hostapd apache2 bridge-utils iptables iptables-persistent
 
 # Stop NetworkManager and wpa_supplicant if they are running
 systemctl stop NetworkManager
@@ -18,42 +24,38 @@ ip link set dev wlan1 master br0
 ip link set br0 up
 ip addr add 10.1.1.1/24 dev br0
 
-# dnsmasq.conf
-echo "interface=br0
+# Configure dnsmasq
+cat <<EOL > /etc/dnsmasq.conf
+interface=br0
 listen-address=10.1.1.1
 no-hosts
 dhcp-range=10.1.1.2,10.1.1.254,10m
 dhcp-option=option:router,10.1.1.1
 dhcp-authoritative
 
-address=/apple.com/10.1.1.1
-address=/appleiphonecell.com/10.1.1.1
-address=/airport.us/10.1.1.1
-address=/akamaiedge.net/10.1.1.1
-address=/akamaitechnologies.com/10.1.1.1
-address=/microsoft.com/10.1.1.1
-address=/msftncsi.com/10.1.1.1
-address=/msftconnecttest.com/10.1.1.1
-address=/google.com/10.1.1.1
-address=/gstatic.com/10.1.1.1
-address=/googleapis.com/10.1.1.1
-address=/android.com/10.1.1.1" > /etc/dnsmasq.conf
+address=/.*/10.1.1.1
+EOL
 
-# hostapd.conf
-echo "interface=wlan1
+# Configure hostapd
+cat <<EOL > /etc/hostapd/hostapd.conf
+interface=wlan1
 driver=nl80211
 channel=6
 hw_mode=g
 ssid=End Of The World
 bridge=br0
 auth_algs=1
-wmm_enabled=0" > /etc/hostapd/hostapd.conf
+wmm_enabled=0
+EOL
 
 # Ensure Apache is using the existing index.html
 # Assuming the existing index.html is already in the default DocumentRoot /var/www/html
 
 # Enable IP forwarding
 sysctl -w net.ipv4.ip_forward=1
+
+# Persist IP forwarding across reboots
+echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
 
 # Flush existing iptables rules
 iptables --flush
@@ -71,11 +73,16 @@ iptables -t nat -A PREROUTING -i wlan1 -p tcp --dport 443 -j DNAT --to-destinati
 # Set up iptables rules for masquerading
 iptables -t nat -A POSTROUTING -j MASQUERADE
 
+# Ensure the /etc/iptables directory exists
+mkdir -p /etc/iptables
+
+# Save iptables rules to be persistent across reboots
+iptables-save > /etc/iptables/rules.v4
 
 # Restart services
-systemctl restart dnsmasq 
-systemctl restart hostapd 
-systemctl restart apache2 
+systemctl restart dnsmasq
+systemctl restart hostapd
+systemctl restart apache2
 systemctl restart NetworkManager
 
 # Check if hostapd is running
