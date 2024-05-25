@@ -230,9 +230,9 @@ cat <<EOL > $INDEX_HTML
         <img src="frowny.png" alt="Welcome Image">
         <h2>Choose An Option</h2>
         <ul>
-            <li><a href="http://$SERVER_IP/live-chat">Live Chat</a></li>
-            <li><a href="http://$SERVER_IP/fileshare">Knowledge Base Documents</a></li>
-            <li><a href="http://$SERVER_IP/music">Listen To Music</a></li>
+            <li><a href="http://10.1.1.1/live-chat">Live Chat</a></li>
+            <li><a href="http://10.1.1.1/fileshare">Knowledge Base Documents</a></li>
+            <li><a href="http://10.1.1.1/music">Listen To Music</a></li>
         </ul>
     </div>
 </body>
