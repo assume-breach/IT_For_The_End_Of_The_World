@@ -24,6 +24,10 @@ ip link set dev wlan1 master br0
 ip link set br0 up
 ip addr add 10.1.1.1/24 dev br0
 
+# Restart network services to apply changes
+systemctl restart NetworkManager
+systemctl restart wpa_supplicant
+
 # Configure dnsmasq
 cat <<EOL > /etc/dnsmasq.conf
 interface=br0
