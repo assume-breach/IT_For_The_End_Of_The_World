@@ -36,7 +36,7 @@ EOL
 # Configure hostapd
 cat <<'EOL' > /etc/hostapd/hostapd.conf
 interface=wlan1
-driver=nl80211
+#driver=nl80211
 channel=6
 hw_mode=g
 ssid=TestNetwork
