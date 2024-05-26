@@ -8,7 +8,7 @@ fi
 
 # Install necessary packages
 apt-get update
-apt-get install -y dnsmasq hostapd apache2 bridge-utils iptables iptables-persistent
+apt-get install -y bridge-utils iptables iptables-persistent
 
 # Stop NetworkManager and wpa_supplicant if they are running
 systemctl stop NetworkManager
@@ -28,29 +28,6 @@ ip addr add 10.1.1.1/24 dev br0
 systemctl restart NetworkManager
 systemctl restart wpa_supplicant
 
-# Configure dnsmasq
-cat <<EOL > /etc/dnsmasq.conf
-interface=br0
-listen-address=10.1.1.1
-no-hosts
-dhcp-range=10.1.1.2,10.1.1.254,10m
-dhcp-option=option:router,10.1.1.1
-dhcp-authoritative
-
-address=/.*/10.1.1.1
-EOL
-
-# Configure hostapd
-cat <<EOL > /etc/hostapd/hostapd.conf
-interface=wlan1
-driver=nl80211
-channel=6
-hw_mode=g
-ssid=End Of The World
-bridge=br0
-auth_algs=1
-wmm_enabled=0
-EOL
 
 # Ensure Apache is using the existing index.html
 # Assuming the existing index.html is already in the default DocumentRoot /var/www/html
