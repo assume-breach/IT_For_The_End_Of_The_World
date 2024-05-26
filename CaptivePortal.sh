@@ -10,65 +10,28 @@ fi
 apt-get update
 apt-get install -y bridge-utils iptables iptables-persistent
 
-# Stop NetworkManager and wpa_supplicant if they are running
-systemctl stop NetworkManager
-systemctl stop wpa_supplicant
-systemctl unmask hostapd 
-
-# Bring up wlan1 interface
-ip link set wlan1 up
-
-# Create bridge interface br0 and add wlan1 to it
-ip link add name br0 type bridge
-ip link set dev wlan1 master br0
-ip link set br0 up
-ip addr add 10.1.1.1/24 dev br0
-
-# Restart network services to apply changes
-systemctl restart NetworkManager
-systemctl restart wpa_supplicant
-
-
-# Ensure Apache is using the existing index.html
-# Assuming the existing index.html is already in the default DocumentRoot /var/www/html
-
-# Enable IP forwarding
-sysctl -w net.ipv4.ip_forward=1
-
-# Persist IP forwarding across reboots
-echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
-
-# Flush existing iptables rules
+service apache2 start
+sleep 1
+#ifconfig wlan0 down
+#macchanger -A wlan0
+sleep 1 
+#ifconfig wlan0 up
+sleep 1
+hostapd -B /etc/hostapd/hostapd.conf
+sleep 2
+ifconfig br0 up
+sleep 2
+ifconfig br0 10.1.1.1 netmask 255.255.255.0
+sysctl net.ipv4.ip_forward=1
 iptables --flush
 iptables -t nat --flush
-
-# Set up iptables rules for DNS redirection
-iptables -t nat -A PREROUTING -i wlan1 -p udp --dport 53 -j DNAT --to-destination 10.1.1.1:53
-
-# Set up iptables rules for HTTP redirection
-iptables -t nat -A PREROUTING -i wlan1 -p tcp --dport 80 -j DNAT --to-destination 10.1.1.1:80
-
-# Set up iptables rules for HTTPS redirection (redirect to port 80 as captive portals usually don't use HTTPS)
-iptables -t nat -A PREROUTING -i wlan1 -p tcp --dport 443 -j DNAT --to-destination 10.1.1.1:80
-
-# Set up iptables rules for masquerading
+iptables -t nat -A PREROUTING -i br0 -p udp -m udp --dport 53 -j DNAT --to-destination 10.1.1.1:53
+iptables -t nat -A PREROUTING -i br0 -p tcp -m tcp --dport 80 -j DNAT --to-destination 10.1.1.1:80
+iptables -t nat -A PREROUTING -i br0 -p tcp -m tcp --dport 443 -j DNAT --to-destination 10.1.1.1:80
 iptables -t nat -A POSTROUTING -j MASQUERADE
-
-# Ensure the /etc/iptables directory exists
-mkdir -p /etc/iptables
-
-# Save iptables rules to be persistent across reboots
-iptables-save > /etc/iptables/rules.v4
-
-# Restart services
-systemctl restart dnsmasq
-systemctl restart hostapd
-systemctl restart apache2
-systemctl restart NetworkManager
-
-# Check if hostapd is running
-if ! pgrep hostapd >/dev/null; then
-    echo "hostapd is not running. Please check hostapd configuration and try again."
-else
-    echo "Configuration files updated, IP forwarding enabled, and services restarted."
-fi
+sleep 2
+service dnsmasq start
+sleep 2
+service dnsmasq restart
+sleep 4
+exit 0
