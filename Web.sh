@@ -266,6 +266,7 @@ a2ensite 000-default.conf
 
 # Reload Apache to apply the new configuration
 systemctl reload apache2
+systemctl enable worldended-chat
 
 # Print completion message
 echo "Worldended chat server and fileshare setup is complete."
