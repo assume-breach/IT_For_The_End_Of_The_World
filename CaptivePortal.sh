@@ -42,6 +42,7 @@ address=/#/10.1.1.1
 EOF
 
 # Restart dnsmasq
+systemctl enable dnsmasq
 systemctl restart dnsmasq
 
 # Configure iptables for captive portal
@@ -58,7 +59,9 @@ netfilter-persistent save
 systemctl restart hostapd
 
 # Ensure Apache2 is running
+systemctl enable apache2
 systemctl restart apache2
+
 
 # Create a simple index.html for the captive portal
 cat <<EOF > /var/www/html/index.html
