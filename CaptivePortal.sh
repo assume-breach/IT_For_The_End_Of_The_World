@@ -49,6 +49,10 @@ systemctl restart dnsmasq
 cat <<EOF >> /etc/resolv.conf
 nameserver 10.1.1.1
 EOF
+cat <<EOF > /etc/NetworkManager/NetworkManager.conf
+[keyfile]
+unmanaged-devices=interface-name:wlan1
+EOF
 
 # Configure iptables for captive portal
 iptables -t nat -A PREROUTING -i wlan1 -p tcp --dport 80 -j DNAT --to-destination 10.1.1.1:80
