@@ -45,6 +45,11 @@ EOF
 systemctl enable dnsmasq
 systemctl restart dnsmasq
 
+#Configure NameServer
+cat <<EOF >> /etc/resolv.conf
+nameserver 10.1.1.1
+EOF
+
 # Configure iptables for captive portal
 iptables -t nat -A PREROUTING -i wlan1 -p tcp --dport 80 -j DNAT --to-destination 10.1.1.1:80
 iptables -t nat -A PREROUTING -i wlan1 -p tcp --dport 443 -j DNAT --to-destination 10.1.1.1:80
