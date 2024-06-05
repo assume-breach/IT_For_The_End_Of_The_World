@@ -54,6 +54,8 @@ cat <<EOF > /etc/NetworkManager/NetworkManager.conf
 unmanaged-devices=interface-name:wlan1
 EOF
 
+systemctl restart NetworkManager
+
 # Configure iptables for captive portal
 iptables -t nat -A PREROUTING -i wlan1 -p tcp --dport 80 -j DNAT --to-destination 10.1.1.1:80
 iptables -t nat -A PREROUTING -i wlan1 -p tcp --dport 443 -j DNAT --to-destination 10.1.1.1:80
