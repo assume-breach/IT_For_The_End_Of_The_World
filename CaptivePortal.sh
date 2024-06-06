@@ -21,7 +21,7 @@ systemctl enable hostapd
 cat <<EOF > /etc/hostapd/hostapd.conf
 interface=wlan1
 driver=nl80211
-ssid=CaptivePortal
+ssid="Connect Here"
 hw_mode=g
 channel=6
 macaddr_acl=0
@@ -49,6 +49,7 @@ systemctl restart dnsmasq
 cat <<EOF >> /etc/resolv.conf
 nameserver 10.1.1.1
 EOF
+
 cat <<EOF > /etc/NetworkManager/NetworkManager.conf
 [keyfile]
 unmanaged-devices=interface-name:wlan1
@@ -72,20 +73,5 @@ systemctl restart hostapd
 # Ensure Apache2 is running
 systemctl enable apache2
 systemctl restart apache2
-
-
-# Create a simple index.html for the captive portal
-cat <<EOF > /var/www/html/index.html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Captive Portal</title>
-</head>
-<body>
-    <h1>Welcome to the Captive Portal</h1>
-    <p>Please log in to continue.</p>
-</body>
-</html>
-EOF
 
 echo "Captive portal setup complete. Connect to the 'CaptivePortal' WiFi network."
