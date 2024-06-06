@@ -264,6 +264,11 @@ EOL
 # Enable the Apache site configuration
 a2ensite 000-default.conf
 
+#Configure NameServer
+cat <<EOF >> /etc/resolv.conf
+nameserver 10.1.1.1
+EOF
+
 # Reload Apache to apply the new configuration
 systemctl reload apache2
 systemctl enable worldended-chat
