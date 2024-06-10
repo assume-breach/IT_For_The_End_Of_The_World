@@ -2,6 +2,8 @@
 chmod +x /opt/IT_For_The_End_Of_The_World/CaptivePortal.sh
 chmod +x /opt/IT_For_The_End_Of_The_World/Web.sh
 chmod +x /opt/IT_For_The_End_Of_The_World/Music.sh
+chmod +x /opt/IT_For_The_End_Of_The_World/FileShare.sh
+
 
 ###Captive Portal Service Install###
 echo '[Unit]
