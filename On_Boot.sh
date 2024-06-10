@@ -53,4 +53,3 @@ WantedBy=default.target' > /etc/systemd/system/Music.service
 systemctl enable Music.service
 systemctl start Music
 
-.service
