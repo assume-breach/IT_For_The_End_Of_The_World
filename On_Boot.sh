@@ -53,3 +53,19 @@ WantedBy=default.target' > /etc/systemd/system/Music.service
 systemctl enable Music.service
 systemctl start Music
 
+###File Server Service Install###
+echo '[Unit]
+Description=File Server
+After=network.target
+
+[Service]
+ExecStart=/opt/IT_For_The_End_Of_The_World/FileShare.sh
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target' > /etc/systemd/system/FileShare.service
+
+# Step 3: Enable and start the service
+systemctl enable FileShare.service
+systemctl start FileShare
