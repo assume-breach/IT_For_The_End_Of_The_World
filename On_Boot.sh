@@ -38,22 +38,21 @@ WantedBy=default.target' > /etc/systemd/system/Web.service
 systemctl enable Web.service
 systemctl start Web.service
 
-###Music Service Install###
-echo '[Unit]
-Description=Music
+# Music Service Install
+cat <<EOF > /etc/systemd/system/Music.service
+[Unit]
+Description=Music Service
 After=network.target
 
 [Service]
 ExecStart=/opt/IT_For_The_End_Of_The_World/Music.sh
-Type=oneshot
-RemainAfterExit=yes
+Type=simple
+Restart=always
+RestartSec=5
 
 [Install]
-WantedBy=default.target' > /etc/systemd/system/Music.service
-
-# Step 3: Enable and start the service
-systemctl enable Music.service
-systemctl start Music
+WantedBy=multi-user.target
+EOF
 
 ###File Server Service Install###
 echo '[Unit]
