@@ -9,20 +9,18 @@ fi
 # Make scripts executable
 chmod +x /opt/IT_For_The_End_Of_The_World/CaptivePortal.sh
 chmod +x /opt/IT_For_The_End_Of_The_World/Web.sh
-chmod +x /opt/IT_For_The_End_Of_The_World/Music.sh
 chmod +x /opt/IT_For_The_End_Of_The_World/FileShare.sh
 
 ### Captive Portal Service Install ###
 cat <<EOF > /etc/systemd/system/CaptivePortal.service
 [Unit]
-Description=Captive Portal Service
+Description=Captive Portal
 After=network.target
 
 [Service]
 ExecStart=/opt/IT_For_The_End_Of_The_World/CaptivePortal.sh
-Type=simple
-Restart=always
-RestartSec=5
+Type=oneshot
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
@@ -35,14 +33,13 @@ systemctl start CaptivePortal.service
 ### Web Service Install ###
 cat <<EOF > /etc/systemd/system/Web.service
 [Unit]
-Description=Web Service
+Description=Web
 After=network.target
 
 [Service]
 ExecStart=/opt/IT_For_The_End_Of_The_World/Web.sh
-Type=simple
-Restart=always
-RestartSec=5
+Type=oneshot
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
@@ -75,14 +72,13 @@ systemctl start Music.service
 ### File Server Service Install ###
 cat <<EOF > /etc/systemd/system/FileShare.service
 [Unit]
-Description=File Server Service
+Description=File Server
 After=network.target
 
 [Service]
 ExecStart=/opt/IT_For_The_End_Of_The_World/FileShare.sh
-Type=simple
-Restart=always
-RestartSec=5
+Type=oneshot
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
