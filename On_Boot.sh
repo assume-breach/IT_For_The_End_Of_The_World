@@ -1,44 +1,58 @@
-# Make it executable
+#!/bin/bash
+
+# Ensure the directory exists
+if [ ! -d "/opt/IT_For_The_End_Of_The_World/" ]; then
+  echo "Directory /opt/IT_For_The_End_Of_The_World/ does not exist."
+  exit 1
+fi
+
+# Make scripts executable
 chmod +x /opt/IT_For_The_End_Of_The_World/CaptivePortal.sh
 chmod +x /opt/IT_For_The_End_Of_The_World/Web.sh
 chmod +x /opt/IT_For_The_End_Of_The_World/Music.sh
 chmod +x /opt/IT_For_The_End_Of_The_World/FileShare.sh
 
-
-###Captive Portal Service Install###
-echo '[Unit]
-Description=Captive Portal
+### Captive Portal Service Install ###
+cat <<EOF > /etc/systemd/system/CaptivePortal.service
+[Unit]
+Description=Captive Portal Service
 After=network.target
 
 [Service]
 ExecStart=/opt/IT_For_The_End_Of_The_World/CaptivePortal.sh
-Type=oneshot
-RemainAfterExit=yes
+Type=simple
+Restart=always
+RestartSec=5
 
 [Install]
-WantedBy=default.target' > /etc/systemd/system/CaptivePortal.service
+WantedBy=multi-user.target
+EOF
 
+systemctl daemon-reload
 systemctl enable CaptivePortal.service
 systemctl start CaptivePortal.service
 
-###Web Service Install###
-echo '[Unit]
-Description=Web
+### Web Service Install ###
+cat <<EOF > /etc/systemd/system/Web.service
+[Unit]
+Description=Web Service
 After=network.target
 
 [Service]
 ExecStart=/opt/IT_For_The_End_Of_The_World/Web.sh
-Type=oneshot
-RemainAfterExit=yes
+Type=simple
+Restart=always
+RestartSec=5
 
 [Install]
-WantedBy=default.target' > /etc/systemd/system/Web.service
+WantedBy=multi-user.target
+EOF
 
-# Step 3: Enable and start the service
+systemctl daemon-reload
 systemctl enable Web.service
 systemctl start Web.service
 
-# Music Service Install
+### Music Service Install ###
 cat <<EOF > /etc/systemd/system/Music.service
 [Unit]
 Description=Music Service
@@ -54,19 +68,26 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-###File Server Service Install###
-echo '[Unit]
-Description=File Server
+systemctl daemon-reload
+systemctl enable Music.service
+systemctl start Music.service
+
+### File Server Service Install ###
+cat <<EOF > /etc/systemd/system/FileShare.service
+[Unit]
+Description=File Server Service
 After=network.target
 
 [Service]
 ExecStart=/opt/IT_For_The_End_Of_The_World/FileShare.sh
-Type=oneshot
-RemainAfterExit=yes
+Type=simple
+Restart=always
+RestartSec=5
 
 [Install]
-WantedBy=default.target' > /etc/systemd/system/FileShare.service
+WantedBy=multi-user.target
+EOF
 
-# Step 3: Enable and start the service
+systemctl daemon-reload
 systemctl enable FileShare.service
-systemctl start FileShare
+systemctl start FileShare.service
