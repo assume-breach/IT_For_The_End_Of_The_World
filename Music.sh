@@ -29,7 +29,7 @@ cat <<EOL > $APACHE_CONF
 EOL
 
 # Restart Apache to apply changes
-systemctl restart apache2
+#systemctl restart apache2
 
 # Print completion message
 echo "Music mapping setup is complete."
