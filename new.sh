@@ -6,6 +6,21 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
+
+# Edit NetworkManager configuration to disable DNS management
+echo -e "[main]\ndns=none" | sudo tee /etc/NetworkManager/NetworkManager.conf > /dev/null
+
+# Restart NetworkManager service
+sudo systemctl restart NetworkManager
+
+# Update /etc/resolv.conf to use dnsmasq
+echo "nameserver 127.0.0.1" | sudo tee /etc/resolv.conf > /dev/null
+
+# Restart dnsmasq service
+sudo systemctl restart dnsmasq
+
+echo "Configuration complete. NetworkManager will no longer manage DNS settings."
+
 # Define directories and file paths
 BASE_DIR="/opt/simple-chat"
 CHAT_SERVER_JS="$BASE_DIR/server.js"
