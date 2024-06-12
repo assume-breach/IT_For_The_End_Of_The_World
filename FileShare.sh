@@ -1,5 +1,11 @@
 #!/bin/bash
-apt install apache2 -y
+
+# Ensure the script is executed with superuser privileges
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root" 
+   exit 1
+fi
+
 # Define directories and file paths
 FILES_DIR="/opt/fileserver"
 APACHE_CONF="/etc/apache2/sites-available/000-default.conf"
@@ -29,11 +35,18 @@ echo "
 # Restart Samba service to apply changes
 systemctl restart smbd
 
-# Configure Apache to serve the fileshare under /fileshare
+# Configure Apache to serve the chat application under /live-chat and fileshare under /fileshare
 cat <<EOL > $APACHE_CONF
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost
     DocumentRoot /var/www/html
+
+    Alias /live-chat /opt/simple-chat/public
+    <Directory /opt/simple-chat/public>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
 
     Alias /fileshare $FILES_DIR
     <Directory $FILES_DIR>
