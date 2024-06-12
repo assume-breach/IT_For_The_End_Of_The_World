@@ -44,7 +44,7 @@ EOF
 # Restart dnsmasq
 systemctl enable dnsmasq
 systemctl restart dnsmasq
-
+rm /etc/resolv.conf
 #Configure NameServer
 cat <<EOF >> /etc/resolv.conf
 nameserver 10.1.1.1
