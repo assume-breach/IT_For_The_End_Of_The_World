@@ -17,7 +17,7 @@ sysctl -w net.ipv4.ip_forward=1
 
 # Install necessary packages
 apt-get update
-apt-get install -y hostapd dnsmasq apache2 iptables-persistent apache2 nodejs npm
+apt-get install -y hostapd dnsmasq apache2 iptables-persistent apache2 nodejs npm samba
 
 # Unmask and enable hostapd
 systemctl unmask hostapd
