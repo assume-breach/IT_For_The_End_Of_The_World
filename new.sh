@@ -23,7 +23,7 @@ SERVER_IP="10.1.1.1"
 
 # Install necessary packages
 apt update
-apt install -y apache2 nodejs npm samba
+apt install -y apache2 nodejs npm samba net-tools
 
 # Create necessary directories
 mkdir -p $BASE_DIR/public
@@ -288,16 +288,22 @@ systemctl enable apache2
 systemctl enable smbd
 systemctl enable nmbd
 
-# Assign the IP address (this configuration depends on your network interface name)
-IFACE=$(ip -o -4 route show to default | awk '{print $5}')
-cat <<EOL > /etc/netplan/01-netcfg.yaml
-network:
-  version: 2
-  ethernets:
-    $IFACE:
-      dhcp4: no
-      addresses: [$SERVER_IP/24]
+# Configure the static IP address
+cat <<EOL >> /etc/network/interfaces
+
+# The primary network interface
+auto $IFACE
+iface $IFACE inet static
+    address $SERVER_IP
+    netmask 255.255.255.0
+    gateway 10.1.1.1
 EOL
 
-# Apply the netplan configuration
-netplan apply
+# Restart the networking service to apply changes
+systemctl restart networking
+
+# Print completion message
+echo "Worldended chat server and fileshare setup is complete."
+echo "The chat server will automatically start at boot."
+echo "You can start the chat server manually by running 'systemctl start worldended-chat' or stop it with 'systemctl stop worldended-chat'."
+echo "Access the fileshare at http://$SERVER_IP/fileshare"
