@@ -6,82 +6,6 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# Ensure wlan1 is up
-ip link set wlan1 up
-
-# Assign a static IP address to wlan1 (ignore if already assigned)
-ip addr add 10.1.1.1/24 dev wlan1 2>/dev/null || true
-
-# Enable IP forwarding
-sysctl -w net.ipv4.ip_forward=1
-
-# Install necessary packages
-apt-get update
-apt-get install -y hostapd dnsmasq apache2 iptables-persistent apache2 nodejs npm samba
-
-# Unmask and enable hostapd
-systemctl unmask hostapd
-systemctl enable hostapd
-
-# Configure hostapd
-cat <<EOF > /etc/hostapd/hostapd.conf
-interface=wlan1
-driver=nl80211
-ssid="Connect Here"
-hw_mode=g
-channel=6
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-EOF
-
-# Update default hostapd config
-sed -i 's|#DAEMON_CONF=""|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/default/hostapd
-
-# Configure dnsmasq
-cat <<EOF > /etc/dnsmasq.conf
-interface=wlan1
-dhcp-range=10.1.1.2,10.1.1.100,255.255.255.0,24h
-dhcp-option=3,10.1.1.1
-dhcp-option=6,10.1.1.1
-address=/#/10.1.1.1
-EOF
-
-# Restart dnsmasq
-systemctl enable dnsmasq
-systemctl restart dnsmasq
-
-#Configure NameServer
-cat <<EOF >> /etc/resolv.conf
-nameserver 10.1.1.1
-EOF
-
-cat <<EOF > /etc/NetworkManager/NetworkManager.conf
-[keyfile]
-unmanaged-devices=interface-name:wlan1
-EOF
-
-systemctl restart NetworkManager
-
-# Configure iptables for captive portal
-iptables -t nat -A PREROUTING -i wlan1 -p tcp --dport 80 -j DNAT --to-destination 10.1.1.1:80
-iptables -t nat -A PREROUTING -i wlan1 -p tcp --dport 443 -j DNAT --to-destination 10.1.1.1:80
-iptables -t nat -A POSTROUTING -j MASQUERADE
-iptables -A FORWARD -p tcp -d 10.1.1.1 --dport 80 -j ACCEPT
-iptables -A FORWARD -p tcp -d 10.1.1.1 --dport 443 -j ACCEPT
-
-# Save iptables rules
-netfilter-persistent save
-
-# Restart hostapd
-systemctl restart hostapd
-
-# Ensure Apache2 is running
-systemctl enable apache2
-systemctl restart apache2
-
-echo "Captive portal setup complete. Connect to the 'CaptivePortal' WiFi network."
-
 # Define directories and file paths
 BASE_DIR="/opt/simple-chat"
 CHAT_SERVER_JS="$BASE_DIR/server.js"
@@ -92,26 +16,23 @@ APACHE_CONF="/etc/apache2/sites-available/000-default.conf"
 MUSIC_DIR="/var/www/html/music"
 INDEX_HTML="/var/www/html/index.html"
 FILESHARE_DIR="/var/www/html/fileshare"
+FILES_DIR="/opt/fileserver"
 
-# Function to get the server's IP address
-get_ip() {
-    hostname -I | awk '{print $1}'
-}
-
-# Get the server's IP address
-SERVER_IP=$(get_ip)
+# Server IP
+SERVER_IP="10.1.1.1"
 
 # Install necessary packages
 apt update
-
-
-# Copy frowny.png to the web directory
-cp frowny.png /var/www/html/
+apt install -y apache2 nodejs npm samba
 
 # Create necessary directories
 mkdir -p $BASE_DIR/public
 mkdir -p $MUSIC_DIR
 mkdir -p $FILESHARE_DIR
+mkdir -p $FILES_DIR
+
+# Set permissions for the Samba fileshare directory to allow open access
+chmod -R 777 "$FILES_DIR"
 
 # Create package.json for chat server
 cat <<EOL > $CHAT_PACKAGE_JSON
@@ -282,6 +203,9 @@ systemctl enable worldended-chat.service
 # Start the chat server service
 systemctl start worldended-chat.service
 
+# Create sample music file
+echo "This is a sample music file" > $MUSIC_DIR/sample-music.txt
+
 # Create the main index.html file
 cat <<EOL > $INDEX_HTML
 <!DOCTYPE html>
@@ -303,16 +227,16 @@ cat <<EOL > $INDEX_HTML
         <img src="frowny.png" alt="Welcome Image">
         <h2>Choose An Option</h2>
         <ul>
-            <li><a href="http://10.1.1.1:/live-chat">Live Chat</a></li>
-            <li><a href="http://10.1.1.1/fileshare">Knowledge Base Documents</a></li>
-            <li><a href="http://10.1.1.1/music">Listen To Music</a></li>
+            <li><a href="http://$SERVER_IP:3000">Live Chat</a></li>
+            <li><a href="http://$SERVER_IP/fileshare">Knowledge Base Documents</a></li>
+            <li><a href="http://$SERVER_IP/music">Listen To Music</a></li>
         </ul>
     </div>
 </body>
 </html>
 EOL
 
-# Configure Apache to serve the chat application under /live-chat and fileshare under /fileshare
+# Configure Apache to serve the chat application and fileshare under the specified paths
 cat <<EOL > $APACHE_CONF
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost
@@ -323,8 +247,14 @@ cat <<EOL > $APACHE_CONF
         AllowOverride None
         Require all granted
     </Directory>
-    Alias /fileshare /var/www/html/fileshare
-    <Directory /var/www/html/fileshare>
+    Alias /fileshare $FILES_DIR
+    <Directory $FILES_DIR>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+    Alias /music /var/www/html/music
+    <Directory /var/www/html/music>
         Options Indexes FollowSymLinks
         AllowOverride None
         Require all granted
@@ -337,17 +267,31 @@ EOL
 # Enable the Apache site configuration
 a2ensite 000-default.conf
 
-#Configure NameServer
+# Configure NameServer
 cat <<EOF >> /etc/resolv.conf
 nameserver 10.1.1.1
 EOF
 
 # Reload Apache to apply the new configuration
 systemctl reload apache2
-systemctl enable worldended-chat
-systemctl start worldended-chat
+
+# Add a Samba share configuration
+cat <<EOL >> /etc/samba/smb.conf
+[WorldEnded]
+   comment = Shared Folder
+   path = $FILES_DIR
+   browseable = yes
+   read only = no
+   guest ok = yes
+   create mask = 0777
+   directory mask = 0777
+EOL
+
+# Restart Samba service to apply changes
+systemctl restart smbd
 
 # Print completion message
 echo "Worldended chat server and fileshare setup is complete."
 echo "The chat server will automatically start at boot."
 echo "You can start the chat server manually by running 'systemctl start worldended-chat' or stop it with 'systemctl stop worldended-chat'."
+echo "Access the fileshare at http://$SERVER_IP/fileshare"
