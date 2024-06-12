@@ -267,31 +267,37 @@ EOL
 # Enable the Apache site configuration
 a2ensite 000-default.conf
 
-# Configure NameServer
-cat <<EOF >> /etc/resolv.conf
-nameserver 10.1.1.1
-EOF
+# Restart Apache to apply changes
+systemctl restart apache2
 
-# Reload Apache to apply the new configuration
-systemctl reload apache2
-
-# Add a Samba share configuration
+# Configure Samba share
 cat <<EOL >> /etc/samba/smb.conf
-[WorldEnded]
-   comment = Shared Folder
+
+[Knowledge Base Documents]
    path = $FILES_DIR
    browseable = yes
    read only = no
    guest ok = yes
-   create mask = 0777
-   directory mask = 0777
 EOL
 
-# Restart Samba service to apply changes
-systemctl restart smbd
+# Restart Samba services to apply changes
+systemctl restart smbd nmbd
 
-# Print completion message
-echo "Worldended chat server and fileshare setup is complete."
-echo "The chat server will automatically start at boot."
-echo "You can start the chat server manually by running 'systemctl start worldended-chat' or stop it with 'systemctl stop worldended-chat'."
-echo "Access the fileshare at http://$SERVER_IP/fileshare"
+# Make the changes persistent
+systemctl enable apache2
+systemctl enable smbd
+systemctl enable nmbd
+
+# Assign the IP address (this configuration depends on your network interface name)
+IFACE=$(ip -o -4 route show to default | awk '{print $5}')
+cat <<EOL > /etc/netplan/01-netcfg.yaml
+network:
+  version: 2
+  ethernets:
+    $IFACE:
+      dhcp4: no
+      addresses: [$SERVER_IP/24]
+EOL
+
+# Apply the netplan configuration
+netplan apply
