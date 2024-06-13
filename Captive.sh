@@ -48,6 +48,7 @@ sysctl -p
 
 # Configure iptables for transparent proxy
 iptables -t nat -A PREROUTING -i $WLAN_IF -p tcp --dport 80 -j DNAT --to-destination $CaptivePortalIP:80
+iptables -t nat -A PREROUTING -i $WLAN_IF -p tcp --dport 443 -j DNAT --to-destination $CaptivePortalIP:80
 iptables -t nat -A POSTROUTING -o $WLAN_IF -j MASQUERADE
 
 # Save iptables rules
