@@ -46,10 +46,8 @@ EOL
 sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
 sysctl -p
 
-# Configure iptables for local traffic only
-iptables -P INPUT ACCEPT
-iptables -P FORWARD ACCEPT
-iptables -P OUTPUT ACCEPT
+# Configure iptables for transparent proxy
+iptables -t nat -A PREROUTING -i $WLAN_IF -p tcp --dport 80 -j DNAT --to-destination $CaptivePortalIP:80
 iptables -t nat -A POSTROUTING -o $WLAN_IF -j MASQUERADE
 
 # Save iptables rules
