@@ -2,7 +2,7 @@
 
 # Ensure the script is executed with superuser privileges
 if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root"
+   echo "This script must be run as root" 
    exit 1
 fi
 
@@ -25,9 +25,18 @@ get_ip() {
 # Get the server's IP address
 SERVER_IP=$(get_ip)
 
+# Ensure wlan1 is up
+ip link set wlan1 up
+
+# Assign a static IP address to wlan1 (ignore if already assigned)
+ip addr add 10.1.1.1/24 dev wlan1 2>/dev/null || true
+
+# Enable IP forwarding
+sysctl -w net.ipv4.ip_forward=1
+
 # Install necessary packages
-apt update
-apt install -y apache2 nodejs npm
+apt-get update
+apt-get install -y apache2 nodejs npm hostapd dnsmasq iptables-persistent
 
 # Copy frowny.png to the web directory
 cp frowny.png /var/www/html/
@@ -151,7 +160,7 @@ cat <<EOL > $CHAT_INDEX_HTML
         });
         socket.on('chat message', (data) => {
             const item = document.createElement('li');
-            item.textContent = \`\${data.user}: \`\${data.message}\`;
+            item.textContent = \`\${data.user}: \${data.message}\`;
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         });
@@ -239,7 +248,7 @@ cat <<EOL > $INDEX_HTML
 </html>
 EOL
 
-# Configure Apache to serve the chat application under /live-chat and fileshare under /fileshare
+# Configure Apache to serve the chat application under /live-chat and fileshare under /fileshare and music under /music
 cat <<EOL > $APACHE_CONF
 <VirtualHost *:80>
     ServerAdmin webmaster@localhost
@@ -250,36 +259,86 @@ cat <<EOL > $APACHE_CONF
         AllowOverride None
         Require all granted
     </Directory>
+
+    <Directory /opt/simple-chat/public>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
+    
     Alias /fileshare /var/www/html/fileshare
     <Directory /var/www/html/fileshare>
         Options Indexes FollowSymLinks
         AllowOverride None
         Require all granted
     </Directory>
+    
     Alias /music /var/www/html/music
-    <Directory /var/www/html
-/html/music>
+    <Directory /var/www/html/music>
         Options Indexes FollowSymLinks
         AllowOverride None
         Require all granted
     </Directory>
-    ErrorLog \${APACHE_LOG_DIR}/error.log
-    CustomLog \${APACHE_LOG_DIR}/access.log combined
+    
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 EOL
 
-# Enable the Apache site configuration
-a2ensite 000-default.conf
+# Restart Apache service to apply changes
+systemctl restart apache2
 
-#Configure NameServer
-cat <<EOF >> /etc/resolv.conf
-nameserver 10.1.1.1
-EOF
+# Configure hostapd for wireless access point
+cat <<EOL > /etc/hostapd/hostapd.conf
+interface=wlan1
+driver=nl80211
+ssid=WorldendedNetwork
+hw_mode=g
+channel=6
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=worldendedpass
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+EOL
 
-# Reload Apache to apply the new configuration
-systemctl reload apache2
+# Update hostapd daemon configuration
+sed -i 's/#DAEMON_CONF=""/DAEMON_CONF="\/etc\/hostapd\/hostapd.conf"/g' /etc/default/hostapd
 
-# Print completion message
-echo "Worldended chat server, fileshare, and music setup is complete."
-echo "The chat server will automatically start at boot."
-echo "You can start the chat server manually by running 'systemctl start worldended-chat' or stop it with 'systemctl stop worldended-chat'."
+# Configure dnsmasq for DNS and DHCP
+cat <<EOL > /etc/dnsmasq.conf
+interface=wlan1
+dhcp-range=10.1.1.2,10.1.1.20,255.255.255.0,24h
+domain=worldended.local
+address=/#/10.1.1.1
+EOL
+
+# Restart services to apply changes
+systemctl restart hostapd
+systemctl restart dnsmasq
+
+# Configure iptables to enable Internet connection sharing
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+iptables -A FORWARD -i eth0 -o wlan1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i wlan1 -o eth0 -j ACCEPT
+
+# Save iptables rules
+iptables-save > /etc/iptables/rules.v4
+
+# Enable iptables-persistent to load rules on boot
+systemctl enable netfilter-persistent
+netfilter-persistent save
+
+# Provide final instructions to user
+echo "Setup complete."
+echo "Wireless network 'WorldendedNetwork' configured with password 'worldendedpass'."
+echo "Connect to 'WorldendedNetwork' from your devices to access:"
+echo "- Live Chat at http://10.1.1.1:3000"
+echo "- Knowledge Base Documents at http://10.1.1.1/fileshare"
+echo "- Music at http://10.1.1.1/music"
+echo "Enjoy!"
+
