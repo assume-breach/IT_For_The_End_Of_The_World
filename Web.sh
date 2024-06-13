@@ -2,7 +2,7 @@
 
 # Ensure the script is executed with superuser privileges
 if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root" 
+   echo "This script must be run as root"
    exit 1
 fi
 
@@ -151,7 +151,7 @@ cat <<EOL > $CHAT_INDEX_HTML
         });
         socket.on('chat message', (data) => {
             const item = document.createElement('li');
-            item.textContent = \`\${data.user}: \${data.message}\`;
+            item.textContent = \`\${data.user}: \`\${data.message}\`;
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         });
@@ -256,6 +256,13 @@ cat <<EOL > $APACHE_CONF
         AllowOverride None
         Require all granted
     </Directory>
+    Alias /music /var/www/html/music
+    <Directory /var/www/html
+/html/music>
+        Options Indexes FollowSymLinks
+        AllowOverride None
+        Require all granted
+    </Directory>
     ErrorLog \${APACHE_LOG_DIR}/error.log
     CustomLog \${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
@@ -271,10 +278,8 @@ EOF
 
 # Reload Apache to apply the new configuration
 systemctl reload apache2
-systemctl enable worldended-chat
-systemctl start worldended-chat
 
 # Print completion message
-echo "Worldended chat server and fileshare setup is complete."
+echo "Worldended chat server, fileshare, and music setup is complete."
 echo "The chat server will automatically start at boot."
 echo "You can start the chat server manually by running 'systemctl start worldended-chat' or stop it with 'systemctl stop worldended-chat'."
