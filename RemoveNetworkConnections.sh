@@ -7,9 +7,10 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 # List all NetworkManager connection profiles
-connections=$(nmcli connection show | awk 'NR>1 {print $1}')
+connections=$(nmcli -t -f NAME connection show)
 
 # Loop through each connection profile and delete it
+IFS=$'\n' # Change IFS to newline to handle spaces in connection names
 for conn in $connections; do
   echo "Deleting connection: $conn"
   nmcli connection delete "$conn"
