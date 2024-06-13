@@ -8,7 +8,7 @@ fi
 
 # Variables
 WLAN_IF="wlan1"
-AP_SSID="MyWiFiAP"
+AP_SSID="Go To 10.1.1.1 In Browser!"
 CaptivePortalIP="10.1.1.1"
 APACHE_CONF="/etc/apache2/sites-available/captiveportal.conf"
 
