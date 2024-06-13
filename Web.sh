@@ -310,10 +310,30 @@ EOL
 systemctl restart hostapd
 systemctl restart dnsmasq
 
-# Configure iptables to enable Internet connection sharing
-iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-iptables -A FORWARD -i eth0 -o wlan1 -m state --state RELATED,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -i wlan1 -o eth0 -j ACCEPT
+# Flush existing rules and chains
+iptables -F
+iptables -X
+
+# Set default policies
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -P OUTPUT ACCEPT
+
+# Enable MASQUERADE for outbound traffic from wlan1 (assuming it's your local wireless network interface)
+iptables -t nat -A POSTROUTING -o wlan1 -j MASQUERADE
+
+# Allow established and related connections
+iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+# Allow traffic from wlan1 to reach local services on 10.1.1.1 except /fileshare
+iptables -t nat -A PREROUTING -p tcp --dport 80 -d 10.1.1.1 ! --destination "/fileshare" -j DNAT --to-destination 10.1.1.1
+
+# Allow traffic to /fileshare to be accessed directly without DNAT
+iptables -t nat -A PREROUTING -p tcp --dport 80 -d 10.1.1.1 --destination "/fileshare" -j ACCEPT
+
+# Save iptables rules
+iptables-save > /etc/iptables/rules.v4
+
 
 # Save iptables rules
 iptables-save > /etc/iptables/rules.v4
