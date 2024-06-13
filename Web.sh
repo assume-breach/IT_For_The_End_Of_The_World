@@ -281,67 +281,6 @@ EOL
 # Restart Apache service to apply changes
 systemctl restart apache2
 
-# Configure hostapd for wireless access point
-cat <<EOL > /etc/hostapd/hostapd.conf
-interface=wlan1
-driver=nl80211
-ssid=WorldendedNetwork
-hw_mode=g
-channel=6
-wmm_enabled=0
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-
-EOL
-
-# Update hostapd daemon configuration
-sed -i 's/#DAEMON_CONF=""/DAEMON_CONF="\/etc\/hostapd\/hostapd.conf"/g' /etc/default/hostapd
-
-# Configure dnsmasq for DNS and DHCP
-cat <<EOL > /etc/dnsmasq.conf
-interface=wlan1
-dhcp-range=10.1.1.2,10.1.1.20,255.255.255.0,24h
-domain=worldended.local
-address=/#/10.1.1.1
-EOL
-
-# Restart services to apply changes
-systemctl restart hostapd
-systemctl restart dnsmasq
-
-# Flush existing rules and chains
-iptables -F
-iptables -X
-
-# Set default policies
-iptables -P INPUT ACCEPT
-iptables -P FORWARD ACCEPT
-iptables -P OUTPUT ACCEPT
-
-# Enable MASQUERADE for outbound traffic from wlan1 (assuming it's your local wireless network interface)
-iptables -t nat -A POSTROUTING -o wlan1 -j MASQUERADE
-
-# Allow established and related connections
-iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-
-# Allow traffic from wlan1 to reach local services on 10.1.1.1 except /fileshare
-iptables -t nat -A PREROUTING -p tcp --dport 80 -d 10.1.1.1 ! --destination "/fileshare" -j DNAT --to-destination 10.1.1.1
-
-# Allow traffic to /fileshare to be accessed directly without DNAT
-iptables -t nat -A PREROUTING -p tcp --dport 80 -d 10.1.1.1 --destination "/fileshare" -j ACCEPT
-
-# Save iptables rules
-iptables-save > /etc/iptables/rules.v4
-
-
-# Save iptables rules
-iptables-save > /etc/iptables/rules.v4
-
-# Enable iptables-persistent to load rules on boot
-systemctl enable netfilter-persistent
-netfilter-persistent save
-
 # Provide final instructions to user
 echo "Setup complete."
 echo "Wireless network 'WorldendedNetwork' configured with password 'worldendedpass'."
