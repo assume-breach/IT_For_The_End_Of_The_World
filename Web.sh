@@ -17,13 +17,6 @@ MUSIC_DIR="/var/www/html/music"
 INDEX_HTML="/var/www/html/index.html"
 FILESHARE_DIR="/var/www/html/fileshare"
 
-# Function to get the server's IP address
-get_ip() {
-    hostname -I | awk '{print $1}'
-}
-
-# Get the server's IP address
-SERVER_IP=$(get_ip)
 
 # Ensure wlan1 is up
 ip link set wlan1 up
@@ -299,11 +292,7 @@ wmm_enabled=0
 macaddr_acl=0
 auth_algs=1
 ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=worldendedpass
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
+
 EOL
 
 # Update hostapd daemon configuration
