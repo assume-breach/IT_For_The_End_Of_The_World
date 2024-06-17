@@ -17,7 +17,7 @@ chmod +x $REMOVE_NETWORK_CONNECTIONS_SCRIPT
 chmod +x $CAPTIVE_SCRIPT
 chmod +x $FILE_SHARE_SCRIPT
 chmod +x $WEB_SCRIPT
-
+chmod +x $MUSIC_SCRIPT
 # Create a temporary cron file
 CRON_TEMP_FILE=$(mktemp)
 
