@@ -11,7 +11,7 @@ REMOVE_NETWORK_CONNECTIONS_SCRIPT="/opt/IT_For_The_End_Of_The_World/RemoveNetwor
 CAPTIVE_SCRIPT="/opt/IT_For_The_End_Of_The_World/Captive.sh"
 FILE_SHARE_SCRIPT="/opt/IT_For_The_End_Of_The_World/FileShare.sh"
 WEB_SCRIPT="/opt/IT_For_The_End_Of_The_World/Web.sh"
-MUSIC_SCRIPT="/opt/IT_For_The_End_Of_The_World/Music.sh
+MUSIC_SCRIPT="/opt/IT_For_The_End_Of_The_World/Music.sh"
 # Make sure all scripts are executable
 chmod +x $REMOVE_NETWORK_CONNECTIONS_SCRIPT
 chmod +x $CAPTIVE_SCRIPT
