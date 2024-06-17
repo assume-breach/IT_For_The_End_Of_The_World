@@ -74,6 +74,11 @@ EOL
 a2ensite captiveportal
 systemctl reload apache2
 
+#Setup Nameserver
+rm /etc/resolv.conf
+echo "nameserver 10.1.1.1" | sudo tee -a /etc/resolv.conf
+
+sleep 10
 # Restart services
 systemctl unmask hostapd
 systemctl enable hostapd
