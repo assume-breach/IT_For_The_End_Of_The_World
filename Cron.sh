@@ -7,7 +7,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # Define the paths to your scripts
-REMOVE_NETWORK_CONNECTIONS_SCRIPT="/opt/IT_For_The_End_Of_The_World/RemoveNetworkConnections>
+REMOVE_NETWORK_CONNECTIONS_SCRIPT="/opt/IT_For_The_End_Of_The_World/RemoveNetworkConnections.sh"
 CAPTIVE_SCRIPT="/opt/IT_For_The_End_Of_The_World/Captive.sh"
 FILE_SHARE_SCRIPT="/opt/IT_For_The_End_Of_The_World/FileShare.sh"
 WEB_SCRIPT="/opt/IT_For_The_End_Of_The_World/Web.sh"
